@@ -14,7 +14,7 @@ model = SentenceTransformer('all-MiniLM-L6-v2')
 print("Model loaded.")
 
 # Preload embedded vectors once
-with open("../embedded_vectors.json", "r", encoding='utf-8') as file:
+with open("outputs/embedded_vectors.json", "r", encoding='utf-8') as file:
     embedded_data = json.load(file)
 print("Embedded vectors loaded. Total chunks:", len(embedded_data))
 
@@ -22,7 +22,7 @@ print("Embedded vectors loaded. Total chunks:", len(embedded_data))
 tokenized_texts = [preprocess_text(chunk.get("chunk_text", "")) for chunk in embedded_data]
 bm25 = BM25Okapi(tokenized_texts)
 print("BM25 initialized.")
-def hybrid_search(query, top_k=10, alpha=0.5):
+def hybrid_search(query, top_k=5, alpha=0.5):
     """Use BM25 for short queries and hybrid for longer ones."""
     if len(query.split()) <= 4:  # Short query optimization
         print("Using BM25 only for short query.")
@@ -36,7 +36,7 @@ def hybrid_search(query, top_k=10, alpha=0.5):
     print("Using hybrid search for longer query.")
     return hybrid_search_full(query, top_k, alpha)
 
-def hybrid_search_full(query, top_k=10, alpha=0.5):
+def hybrid_search_full(query, top_k=5, alpha=0.5):
     """Full hybrid search combining BM25 and embeddings."""
     emb_query = model.encode(query)
     emb_query /= np.linalg.norm(emb_query)
@@ -69,23 +69,29 @@ print("Query received at query_engine.py:", query)
 results = hybrid_search(query, top_k=3)
 
 
-output = []
+output = " -> "
 
 for rank, (score, result) in enumerate(results, start=1):
     # print(f"Rank {rank}: Score={score:.4f}")
     # print(f"PDF: {result.get('file_name', 'N/A')}")
     # print(f"Text: {result.get('chunk_text', 'N/A')}")
     # print("\n")
-    output.append({
-        "query":query,
-        "rank" : rank,
-        "score" : score,
-        "file_name":result.get('file_name',"N/A"),
-        "text" : result.get('chunk_text','N/A')
-    })
+    # output.append({
+    #     "query":query,
+    #     "rank" : rank,
+    #     "score" : score,
+    #     "file_name":result.get('file_name',"N/A"),
+    #     "text" : result.get('chunk_text','N/A')
+    # })
+    output += result.get('chunk_text','N/A')
+
+prompt = query + output
+with open("outputs/prompt.txt", "w") as file:
+    file.write(prompt)
+
     
-with open("outputs/query_output.json","w") as file :
-    json.dump(output,file,ensure_ascii=True,indent=4)
+# with open("outputs/query_output.json","w") as file :
+#     json.dump(output,file,ensure_ascii=True,indent=4)
 
     # with open("raw_text.json", "w", encoding="utf-8") as f:
         # json.dump(cleaned_text_data, f, ensure_ascii=True, indent=4)

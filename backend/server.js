@@ -188,19 +188,28 @@ app.post('/query',(req,res)=>{
 
 
 app.get('/show_result', (req, res) => {
-  fs.readFile('outputs/query_output.json', 'utf8', (err, jsonString) => {
-    if (err) {
-      console.error('Error reading file:', err);
-      return;
-    }
-    try {
-      const data = JSON.parse(jsonString);
-    //   console.log(data);
-      res.status(200).json({ message: data });
-    } catch (err) {
-      console.error('Error parsing JSON string:', err);
-    }
-  });
+    const pythonProcess = spawn ("python",["pycodes/answer_question.py"]);
+    let output = "";
+
+    pythonProcess.stdout.on("data", (data) => {
+        output += data.toString();
+    });
+
+    pythonProcess.stderr.on("data", (data) => {
+        console.error(`Error: ${data}`);
+    });
+
+    pythonProcess.on("close", (code) => {
+        fs.readFile('outputs/result.txt', 'utf8', (err, data) => {
+            if (err) {
+                console.error('Error reading file:', err);
+                return;
+            }
+            console.log(data);
+            res.status(200).json({ "output": data  });
+        });
+    });
+
 });
 
 

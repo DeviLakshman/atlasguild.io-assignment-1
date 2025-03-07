@@ -10,8 +10,8 @@ function App() {
   const [var2,setVar2] = useState(0) ;
   const [var3,setVar3] = useState(0) ;
   const [query,setQuery] = useState("") ;
-  const [results,setResults] = useState([])
-
+  const [results,setResults] = useState([]);
+  const [resultscame,setResultscame] = useState(0) ;
   const handleUpload = async (e) => {
     e.preventDefault() ;
 
@@ -148,10 +148,12 @@ function App() {
       });
       
       const result = await response.json();
-      setResults(result["message"])
-      console.log(results) ;
+      setResults(result["output"])
+      setResultscame(1) ;
+      // console.log(result) ;
       // console.log("The result obtained is:", result);
     } catch (e) {
+      setResultscame(0) ;
       console.error("Error:", e);
     }
   }
@@ -223,9 +225,12 @@ function App() {
                 (var2===1) && 
                  <p> cleaned </p>
               }
-
               {
-                var1 && var2  && (
+                (var3===1) &&
+                <p> Embedded</p>
+              }
+              {
+                var1 && var2 && (var3===1) && (
                   
                   <form onSubmit={handleQuery}>
                     <label> Query  : </label>
@@ -241,22 +246,18 @@ function App() {
               {
                 <button onClick={handleresult}>show results</button>
               }
-                <div>
+                <div >
+                  <span style={{color:"yellow"}}></span>
                   {query}
                 </div>
-                {results.map(result=>(
-                  <p>
-                    <div>
-                     {result["file_name"]}
-                    </div>
-                    <div>
-                     {result["text"]}
-                    </div>
-                    <br />
-                    {/* <hr /> */}
-                    {/* <hr /> */}
-                  </p>
-                ))}
+                
+                {
+                  (resultscame===1) && 
+                
+                    <p>
+                      {results}
+                    </p>
+                }
             </>
             )}
 
